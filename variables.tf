@@ -1,55 +1,35 @@
 variable "aws_region" {
-  description = "AWS region"
+  description = "AWS region for deployment"
   type        = string
-  default = "us-east-1"
-}
-
-variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
-  type        = string
-
-}
-
-
-
-variable "public_subnet_cidrs" {
-  description = "List of public subnet CIDRs"
-  type        = list(string)
-  default = ["10.0.3.0/24"]
-}
-
-variable "public_subnet_azs" {
-  description = "List of availability zones for public subnets"
-  type        = list(string)
-  default = ["us-east-1a"]
-}
-
-variable "private_subnet_cidrs" {
-  description = "List of private subnet CIDRs"
-  type        = list(string)
-  default = ["10.0.4.0/24"]
-}
-
-variable "private_subnet_azs" {
-  description = "List of availability zones for private subnets"
-  type        = list(string)
-  default = ["us-east-1b"]
-}
-
-variable "instance_count" {
-  description = "Number of EC2 instances to launch"
-  type        = number
-  default  = 2
-}
-
-variable "ami_id" {
-  description = "AMI ID for the EC2 instances"
-  type        = string
-  default = "ami-053a45fff0a704a47 "
+  default     = "us-east-1"
 }
 
 variable "instance_type" {
-  description = "Instance type for the EC2 instances"
+  description = "EC2 instance type"
   type        = string
-  default = "t2.micro"
+  default     = "t2.micro"
+}
+
+variable "ami_id" {
+  description = "AMI ID for the instance"
+  default = "ami-053a45fff0a704a47"
+  type        = string
+}
+
+variable "key_name" {
+  description = "Name of the SSH key pair"
+  default = "festkey"
+  type        = string
+}
+
+variable "vpc_id" {
+  description = "VPC ID for the security group"
+  default = "vpc-03da1d4a34130599a"
+  type        = string
+}
+
+variable "subnet_id" {
+  description = "Subnet ID where the instance will be deployed"
+  default = "192.168.0.0/24"
+  type        = string
 }
