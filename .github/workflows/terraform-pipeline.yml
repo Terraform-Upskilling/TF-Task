@@ -1,17 +1,14 @@
-name: Terraform CI/CD pipeline
+name: Terraform CI/CD Workflow
 
 on:
-  workflow_call:
- 
-  secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
-         inputs:
-         aws-region:
-        description: 'AWS Region'
-        required: true
+  push:
+    branches:
+      - development
+  pull_request:
+    branches:
+      - development
+  workflow_dispatch: 
+   
 
 jobs:
   terraform:
@@ -31,24 +28,21 @@ jobs:
 
       # Step 3: Configure AWS Credentials
       - name: Configure AWS Credentials
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set region ${{ secrets.AWS_DEFAULT_REGION }}
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
 
-       # Step 4: Initialize Terraform with Backend Configuration
+      # Step 4: Initialize Terraform with Backend Configuration
       - name: Terraform Init
         run: |
           terraform init \
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
             -backend-config="key=${{ secrets.TF_STATE_KEY }}" \
-            -backend-config="region=${{ secrets.TF_STATE_REGION }}" \
+            -backend-config="region=${{ secrets.AWS_DEFAULT_REGION }}" \
             -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}"
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-          
+
       # Step 5: Install and Run TFLint
       - name: Install and Run TFLint
         run: |
@@ -66,18 +60,17 @@ jobs:
 
       # Step 8: Terraform Plan
       - name: Terraform Plan
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
         run: terraform plan
-
-
-      # Step 9: Terraform Apply
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/development' 
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      # Step 9: Terraform Apply (Only on development branch)
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/development'
         run: terraform apply -auto-approve
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
