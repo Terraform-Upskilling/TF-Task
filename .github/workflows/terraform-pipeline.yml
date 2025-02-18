@@ -1,4 +1,4 @@
-name: Terraform CI/CD Workflows
+name: Terraform CI/CD pipeline
 
 on:
   workflow_call:
@@ -9,7 +9,7 @@ on:
       AWS_SECRET_ACCESS_KEY:
         required: true
          inputs:
-      aws-region:
+         aws-region:
         description: 'AWS Region'
         required: true
 
@@ -21,7 +21,7 @@ jobs:
     steps:
       # Step 1: Checkout Code
       - name: Checkout Code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
        
       # Step 2: Set Up Terraform
       - name: Setup Terraform
