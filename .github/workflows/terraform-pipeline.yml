@@ -2,9 +2,7 @@ name: Terraform CI/CD Workflows
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - development
+ 
   secrets:
       AWS_ACCESS_KEY_ID:
         required: true
