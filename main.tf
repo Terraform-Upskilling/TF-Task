@@ -1,41 +1,31 @@
-
-resource "aws_security_group" "ec2_sg" {
-name        = "ec2-security-group"
-description = "Allow SSH and HTTP traffic"
-
-
-
-
-ingress {
-from_port   = 80
-to_port     = 80
-protocol    = "tcp"
-cidr_blocks = ["0.0.0.0/0"]
+# Create an S3 Bucket
+resource "aws_s3_bucket" "tf-testing-news3-bucket-unique-name" {
+  bucket = var.bucket_name
 }
 
-egress {
-from_port   = 0
-to_port     = 0
-protocol    = "-1"
-cidr_blocks = ["0.0.0.0/0"]
-}
-}
-
-resource "aws_instance" "ec2_instance" {
-ami                    = "ami-053a45fff0a704a47"
-instance_type          ="t2.micro"
-security_groups        = [aws_security_group.ec2_sg.name]
-
-
-tags = {
-Name = "Terraform-EC2"
-}
+# Set bucket ownership controls (optional but recommended)
+resource "aws_s3_bucket_ownership_controls" "ownership" {
+  bucket = aws_s3_bucket.tf-testing-news3-bucket-unique-name.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
-resource "aws_eip" "elastic_ip" {
+# Apply Public ACL settings (disable if bucket should be private)
+resource "aws_s3_bucket_public_access_block" "public_access" {
+  bucket = aws_s3_bucket.tf-testing-news3-bucket-unique-name.id
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
 
+# Upload a file to S3 bucket
+resource "aws_s3_object" "upload_file" {
+  bucket = aws_s3_bucket.tf-testing-news3-bucket-unique-name.id
+  key    = "uploaded-file.txt"  # S3 object key (filename)
+  source = "local-file.txt"     # Local file to upload
+  acl    = "public-read"        # Change to "private" if needed
 }
-resource "aws_eip_association" "eip_assoc" {
-instance_id   = aws_instance.ec2_instance.id
-allocation_id = aws_eip.elastic_ip.id
-}
+
+
