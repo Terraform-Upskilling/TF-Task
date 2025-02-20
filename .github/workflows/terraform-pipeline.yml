@@ -75,19 +75,17 @@ jobs:
 
       # Step 8: Terraform Plan
       - name: Terraform Plan
-       
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-          run: terraform plan   
+          AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+        run: terraform plan
 
-      # Step 9: Terraform Apply (Only on development branch)
+      # Step 9: Terraform Apply (Only on specified branch)
       - name: Terraform Apply
-        if: ${{ inputs.branch_name == github.ref_name }}
-       
+        if: ${{ github.ref == format('refs/heads/{0}', inputs.branch_name) }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
         run: terraform apply -auto-approve
