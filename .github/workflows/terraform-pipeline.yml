@@ -7,6 +7,10 @@ on:
         description: "AWS Region"
         required: true
         type: string
+      branch_name:
+        description: 'Branch Name to execute workflow'
+        required: true
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -28,6 +32,8 @@ jobs:
       # Step 1: Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch_name }}
 
       # Step 2: Set Up Terraform
       - name: Setup Terraform
@@ -69,17 +75,19 @@ jobs:
 
       # Step 8: Terraform Plan
       - name: Terraform Plan
-        run: terraform plan
+       
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+          AWS_DEFAULT_REGION: us-east-1
+          run: terraform plan   
 
       # Step 9: Terraform Apply (Only on development branch)
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/development'
-        run: terraform apply -auto-approve
+        if: ${{ inputs.branch_name == github.ref_name }}
+       
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: terraform apply -auto-approve
