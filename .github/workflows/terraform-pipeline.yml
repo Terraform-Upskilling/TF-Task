@@ -1,13 +1,17 @@
 name: Terraform CI/CD Workflow
 
 on:
-  push:
-    branches:
-      - development
-  pull_request:
-    branches:
-      - development
-  workflow_dispatch: 
+  workflow_call: 
+  secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+        inputs:
+        aws-region:
+        description: 'AWS Region'
+        required: true
+        type: string
    
 
 jobs:
