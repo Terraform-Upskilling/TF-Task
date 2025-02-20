@@ -7,8 +7,6 @@ on:
         description: "AWS Region"
         required: true
         type: string
-      branch_name:
-        description: 'Branch Name to execute workflow'
         required: true
         type: string
     secrets:
@@ -16,13 +14,7 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
-      TF_STATE_BUCKET:
-        required: true
-      TF_STATE_KEY:
-        required: true
-      TF_LOCK_TABLE:
-        required: true
-
+    
 jobs:
   terraform:
     name: Terraform CI/CD
@@ -49,21 +41,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ inputs.aws-region }}
 
-      # Step 4: Initialize Terraform with Backend Configuration
-      - name: Terraform Init
-        run: |
-          terraform init \
-            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
-            -backend-config="key=${{ secrets.TF_STATE_KEY }}" \
-            -backend-config="region=${{ inputs.aws-region }}" \
-            -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}"
-
-      # Step 5: Install and Run TFLint
-      - name: Install and Run TFLint
-        run: |
-          curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
-          tflint --version
-          tflint
 
       # Step 6: Validate Terraform Configuration
       - name: Terraform Validate
@@ -81,7 +58,7 @@ jobs:
           AWS_DEFAULT_REGION: ${{ inputs.aws-region }}
         run: terraform plan
 
-      # Step 9: Terraform Apply (Only on specified branch)
+      # Step 9: Terraform Apply 
       - name: Terraform Apply
         if: ${{ github.ref == format('refs/heads/{0}', inputs.branch_name) }}
         env:
