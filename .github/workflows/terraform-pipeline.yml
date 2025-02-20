@@ -2,7 +2,11 @@ name: Terraform CI/CD Workflow
 
 on:
   workflow_call:
-   
+    inputs:
+      aws-region:
+        description: "AWS Region"
+        required: true
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -13,10 +17,6 @@ on:
       TF_STATE_KEY:
         required: true
       TF_LOCK_TABLE:
-        required: true
-          inputs:
-      aws-region:
-        description: "AWS Region"
         required: true
 
 jobs:
