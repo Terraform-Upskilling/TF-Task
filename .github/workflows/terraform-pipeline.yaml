@@ -3,10 +3,10 @@ name: Terraform CI/CD Workflows
 on:
   workflow_call:
     inputs:
-      aws-region:
+    aws-region:
         description: "AWS Region"
         required: true
-      branch_name:
+         branch_name:
         description: "Branch Name to execute workflow"
         required: true
         type: string
