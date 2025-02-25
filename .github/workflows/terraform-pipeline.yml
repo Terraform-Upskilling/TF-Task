@@ -6,15 +6,6 @@ on:
       aws-region:
         description: "AWS Region"
         required: true
-        type: string
-      repo_name:
-        description: "Repository Name"
-        required: true
-        type: string
-      deploy_env:
-        description: "Deployment Environment"
-        required: true
-        type: string
       branch_name:
         description: "Branch Name to execute workflow"
         required: true
@@ -24,12 +15,7 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
-      TF_STATE_BUCKET:
-        required: true
-      TF_STATE_KEY:
-        required: true
-      TF_LOCK_TABLE:
-        required: true
+  
 
 jobs:
   terraform:
