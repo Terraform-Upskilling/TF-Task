@@ -1,83 +1,73 @@
-
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+# Declare the S3 bucket name variable
+variable "s3_bucket_name" {
+  description = "Name of the S3 bucket"
+  type        = string
+  default     = "tf-1-testing-new"  # Default value for the bucket name
 }
 
-resource "aws_subnet" "public" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.1.0/24"
-  map_public_ip_on_launch = true
+# IAM Policy allowing read, upload, and download from the specified S3 bucket
+resource "aws_iam_policy" "s3_access_policy" {
+  name        = "S3AccessPolicy"
+  description = "Policy to allow read, upload, and download from a specific S3 bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = [
+          "s3:GetObject",    # Allows downloading objects from S3
+          "s3:PutObject",    # Allows uploading objects to S3
+          "s3:ListBucket"    # Allows listing objects in the bucket
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket_name}/*",   # Allows actions on objects within the bucket
+          "arn:aws:s3:::${var.s3_bucket_name}"      # Allows the list operation on the bucket itself
+        ]
+      }
+    ]
+  })
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
+# IAM Role that can be assumed by a service (like EC2, Lambda, or ECS task)
+resource "aws_iam_role" "task_role" {
+  name               = "TaskRoleForS3Access"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action    = "sts:AssumeRole"
+        Principal = {
+          Service = "ec2.amazonaws.com"  # Modify for different services like lambda.amazonaws.com or ecs.amazonaws.com
+        }
+        Effect    = "Allow"
+        Sid       = ""
+      }
+    ]
+  })
 }
 
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
+# Attach the IAM Policy to the IAM Role
+resource "aws_iam_role_policy_attachment" "role_policy_attachment" {
+  role       = aws_iam_role.task_role.name
+  policy_arn = aws_iam_policy.s3_access_policy.arn
 }
 
-resource "aws_route" "default_route" {
-  route_table_id         = aws_route_table.public.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.gw.id
+# Create IAM Instance Profile to associate the role with the EC2 instance
+resource "aws_iam_instance_profile" "instance_profile" {
+  name = "TaskRoleInstanceProfile"
+  role = aws_iam_role.task_role.name
 }
 
-resource "aws_route_table_association" "public_assoc" {
-  subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_security_group" "web_sg" {
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Restrict in production
-  }
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_instance" "web" {
-  ami           = "ami-05b10e08d247fb927" # Amazon Linux 2 AMI
+# Example EC2 instance using the IAM Instance Profile
+resource "aws_instance" "abc_instance" {
+  ami           = "ami-08b5b3a93ed654d19"  # Replace with an appropriate AMI ID
   instance_type = "t2.micro"
-  subnet_id     = aws_subnet.public.id
-  security_groups = [aws_security_group.web_sg.id]
-  associate_public_ip_address = true
 
-  user_data = <<-EOF
-              #!/bin/bash
-              sudo yum update -y
-              sudo amazon-linux-extras enable nginx1
-              sudo yum install -y nginx unzip
-              sudo systemctl start nginx
-              sudo systemctl enable nginx
-
-              cd /usr/share/nginx/html
-              sudo rm -rf *
-              sudo curl -o little-fashion.zip -L "https://www.free-css.com/assets/files/free-css-templates/download/page296/little-fashion.zip"
-              sudo unzip little-fashion.zip
-              sudo mv little-fashion-html/* .
-              sudo rm -rf little-fashion.zip little-fashion-html
-              EOF
+  # Attach the IAM Instance Profile to the EC2 instance
+  iam_instance_profile = aws_iam_instance_profile.instance_profile.name
 
   tags = {
-    Name = "LittleFashionWeb"
+    Name = "S3AccessInstance"
   }
 }
-
