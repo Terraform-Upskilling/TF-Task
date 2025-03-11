@@ -1,10 +1,3 @@
-# Declare the S3 bucket name variable
-variable "s3_bucket_name" {
-  description = "Name of the S3 bucket"
-  type        = string
-  default     = "tf-1-testing-new"  # Default value for the bucket name
-}
-
 # IAM Policy allowing read, upload, and download from the specified S3 bucket
 resource "aws_iam_policy" "s3_access_policy" {
   name        = "S3AccessPolicy"
@@ -29,7 +22,7 @@ resource "aws_iam_policy" "s3_access_policy" {
   })
 }
 
-# IAM Role that can be assumed by a service (like EC2, Lambda, or ECS task)
+
 resource "aws_iam_role" "task_role" {
   name               = "TaskRoleForS3Access"
   assume_role_policy = jsonencode({
